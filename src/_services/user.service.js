@@ -13,12 +13,14 @@ function login(email, password) {
   const loginCred = { user: { email, password } };
   return axios.post(`${ROOT_URL}/users/login`, loginCred).then((user) => {
     localStorage.setItem("token", JSON.stringify(user.data.user.token));
+    localStorage.setItem("user", JSON.stringify(user.data.user));
     return user.data.user;
   });
 }
 
 function logout() {
   localStorage.removeItem("token");
+  localStorage.removeItem("user");
 }
 
 function register(user) {

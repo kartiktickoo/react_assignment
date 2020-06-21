@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { connect } from "react-redux";
 
-import { articleActions } from "../_actions";
+import { articleActions, userActions } from "../_actions";
 
 import React, { Component } from "react";
 import _ from "lodash";
@@ -10,13 +10,28 @@ class HomePage extends Component {
   constructor(props) {
     super(props);
     this.onDeleteClick = this.onDeleteClick.bind(this);
+    this.onFavoriteClick = this.onFavoriteClick.bind(this);
+    this.onFavoriteButtonClick = this.onFavoriteButtonClick.bind(this);
     this.onResetClick = this.onResetClick.bind(this);
+    this.getCurrentUser = this.getCurrentUser.bind(this);
   }
   onDeleteClick(event) {
     event.preventDefault();
     this.props.deletePost(event.target.value, () => {
       this.props.fetchPost();
     });
+  }
+
+  onFavoriteClick(post) {
+    if (!post.favorited) {
+      this.props.favoritePost(post.slug, () => {
+        this.props.fetchPost();
+      });
+    } else {
+      this.props.deleteFavoritePost(post.slug, () => {
+        this.props.fetchPost();
+      });
+    }
   }
 
   onResetClick(event) {
@@ -29,28 +44,24 @@ class HomePage extends Component {
     this.props.fetchTags();
   }
 
-  handleClick(event) {
-    this.props.fetchPostByFilter(event);
+  onTagClick(event) {
+    this.props.fetchPostByFilter("tag", event);
+  }
+
+  onFavoriteButtonClick(event) {
+    event.preventDefault();
+    debugger;
+    let userId = this.getCurrentUser();
+    this.props.fetchPostByFilter("favorited", userId);
+  }
+
+  getCurrentUser() {
+    return JSON.parse(localStorage.getItem("user")).username;
   }
 
   renderPosts() {
     return _.map(this.props.posts, (post) => {
       return (
-        // <div class="col-md-4">
-        //       <div class="card mb-4 box-shadow">
-        //         <div class="card-body">
-        //           <p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>
-        //           <div class="d-flex justify-content-between align-items-center">
-        //             <div class="btn-group">
-        //               <button type="button" class="btn btn-sm btn-outline-secondary">View</button>
-        //               <button type="button" class="btn btn-sm btn-outline-secondary">Edit</button>
-        //             </div>
-        //             <small class="text-muted">9 mins</small>
-        //           </div>
-        //         </div>
-        //       </div>
-        //     </div>
-
         <div key={post.slug} className="col-md-6 px-md-5">
           <div className="card flex-md-row mb-4 box-shadow">
             <div className="card-body d-flex flex-column align-items-start">
@@ -59,6 +70,17 @@ class HomePage extends Component {
               </strong>
               <h3 className="mb-0 text-dark">{post.title}</h3>
               <p className="card-text mb-auto">{post.description}</p>
+              <label>
+                Favorite:
+                <input
+                  name="isGoing"
+                  type="checkbox"
+                  checked={post.favorited}
+                  onChange={() => {
+                    this.onFavoriteClick(post);
+                  }}
+                />
+              </label>
               <div className="d-flex justify-content-between align-items-center">
                 <div className="btn-group">
                   <Link to={`/posts/${post.slug}`}>
@@ -104,7 +126,7 @@ class HomePage extends Component {
   renderTags() {
     return this.props.tags.map((tag) => {
       return (
-        <button key={tag} onClick={() => this.handleClick(tag)}>
+        <button key={tag} onClick={() => this.onTagClick(tag)}>
           {tag}
         </button>
       );
@@ -123,6 +145,15 @@ class HomePage extends Component {
                 onClick={this.onResetClick}
               >
                 Reset tags
+              </button>
+            </span>
+            <span className="m-1">
+              <button
+                type="button"
+                className="btn btn-primary btn-lg"
+                onClick={this.onFavoriteButtonClick}
+              >
+                Favorite
               </button>
             </span>
             <span className="m-1">
@@ -169,6 +200,9 @@ const actionCreators = {
   fetchTags: articleActions.fetchTags,
   fetchPostByFilter: articleActions.fetchPostByFilter,
   deletePost: articleActions.deletePost,
+  favoritePost: articleActions.favoritePost,
+  deleteFavoritePost: articleActions.deleteFavoritePost,
+  // getCurrentUser: userActions.getCurrentUser,
 };
 
 const connectedHomePage = connect(mapStateToProps, actionCreators)(HomePage);

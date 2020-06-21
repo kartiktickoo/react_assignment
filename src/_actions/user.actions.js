@@ -7,6 +7,7 @@ export const userActions = {
   login,
   logout,
   register,
+  // getCurrentUser,
 };
 
 function login(username, password) {
@@ -59,3 +60,7 @@ function register(user) {
       });
   };
 }
+
+// function getCurrentUser() {
+//   return JSON.parse(localStorage.getItem("user")).username;
+// }

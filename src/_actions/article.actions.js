@@ -15,6 +15,8 @@ export const articleActions = {
   updatePost,
   fetchPostByFilter,
   deletePost,
+  favoritePost,
+  deleteFavoritePost,
   deleteComment,
   addComment,
   fetchCommentsById,
@@ -89,17 +91,19 @@ function updatePost(values, slug, callback) {
   };
 }
 
-function fetchPostByFilter(filter) {
+function fetchPostByFilter(filterType, filterID) {
   let config = {
     headers: authHeader(),
   };
   return (dispatch) => {
-    axios.get(`${ROOT_URL}/articles?tag=${filter}`, config).then((response) => {
-      dispatch({
-        type: articleConstants.FETCH_POSTS_BY_FILTER,
-        payload: response,
+    axios
+      .get(`${ROOT_URL}/articles?${filterType}=${filterID}`, config)
+      .then((response) => {
+        dispatch({
+          type: articleConstants.FETCH_POSTS_BY_FILTER,
+          payload: response,
+        });
       });
-    });
   };
 }
 
@@ -111,6 +115,50 @@ function deletePost(slug, callback) {
   return (dispatch) => {
     axios
       .delete(`${ROOT_URL}/articles/${slug}`, config)
+      .then(() => {
+        dispatch({
+          type: articleConstants.DELETE_POST,
+          payload: slug,
+        });
+        callback();
+      })
+      .catch((error) => {
+        let errorMessage = userService.errorHandle(error);
+        dispatch(alertActions.error(errorMessage));
+      });
+  };
+}
+
+function favoritePost(slug, callback) {
+  let config = {
+    headers: authHeader(),
+  };
+
+  return (dispatch) => {
+    axios
+      .post(`${ROOT_URL}/articles/${slug}/favorite`, null, config)
+      .then(() => {
+        dispatch({
+          type: articleConstants.DELETE_POST,
+          payload: slug,
+        });
+        callback();
+      })
+      .catch((error) => {
+        let errorMessage = userService.errorHandle(error);
+        dispatch(alertActions.error(errorMessage));
+      });
+  };
+}
+
+function deleteFavoritePost(slug, callback) {
+  let config = {
+    headers: authHeader(),
+  };
+
+  return (dispatch) => {
+    axios
+      .delete(`${ROOT_URL}/articles/${slug}/favorite`, config)
       .then(() => {
         dispatch({
           type: articleConstants.DELETE_POST,
